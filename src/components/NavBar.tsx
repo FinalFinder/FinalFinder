@@ -5,7 +5,7 @@ import hamburger from "public/hamburger.svg";
 
 export default function NavBar() {
   return (
-    <nav className="flex justify-between items-center bg-gray-2">
+    <nav className="flex items-center justify-between bg-gray-2">
       <div className="flex items-start">
         <Image
           src={orpheusFlag}
@@ -14,7 +14,7 @@ export default function NavBar() {
           height={40}
           className="mr-3"
         />
-        <h1 className="font-secular-one text-2xl text-center py-3">
+        <h1 className="py-3 text-center font-secular-one text-2xl">
           FinalFinder
         </h1>
       </div>

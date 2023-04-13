@@ -14,7 +14,7 @@ const secularOne = Secular_One({
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <div
-      className={`${secularOne.className} bg-gray-1 text-white min-h-screen`}
+      className={`${secularOne.className} min-h-screen bg-gray-1 text-white`}
     >
       <NavBar />
       <Component {...pageProps} />
