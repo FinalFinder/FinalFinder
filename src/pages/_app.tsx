@@ -30,7 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div
-        className={`${secularOne.className} ${outfit.className} min-h-screen bg-gray-1 text-white`}
+        className={`${secularOne.variable} ${outfit.variable} min-h-screen bg-gray-1 text-white`}
       >
         <NavBar />
         <main className="font-outfit">

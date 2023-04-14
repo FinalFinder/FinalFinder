@@ -5,10 +5,12 @@ import dino from "public/dino.png";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-start">
-      <div className="mb-10 flex max-w-xs flex-col items-center justify-start">
-        <p className="text-center text-xl font-bold">Don't study alone.</p>
-        <p className="py-2 text-center text-lg">
+    <div className="flex flex-col items-center justify-center pt-10 md:flex-row md:justify-evenly">
+      <div className="mb-10 flex max-w-xs flex-col items-center justify-start md:max-w-md">
+        <p className="text-center text-xl font-bold md:text-2xl">
+          Don't study alone.
+        </p>
+        <p className="py-2 text-center text-lg md:text-xl">
           Work with other Hack Clubbers taking similar exams so that you can be
           prepared for exam day.
         </p>
@@ -18,7 +20,7 @@ export default function Home() {
               // Link to slack auth
             }}
           >
-            <p className="text-lg">Start Studying</p>
+            <p className="text-lg md:text-xl">Start Studying</p>
           </Button>
         </div>
       </div>
