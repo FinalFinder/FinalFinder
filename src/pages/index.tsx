@@ -8,7 +8,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center pt-10 md:flex-row md:justify-evenly">
       <div className="mb-10 flex max-w-xs flex-col items-center justify-start md:max-w-md">
         <p className="text-center text-xl font-bold md:text-2xl">
-          Don't study alone.
+          Don&apos;t study alone.
         </p>
         <p className="py-2 text-center text-lg md:text-xl">
           Work with other Hack Clubbers taking similar exams so that you can be
