@@ -1,5 +1,6 @@
 import { Secular_One, Outfit } from "next/font/google";
 import Head from "next/head";
+import { SessionProvider } from "next-auth/react";
 
 import "@/styles/globals.css";
 import NavBar from "@/components/NavBar";
@@ -17,9 +18,12 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
   return (
-    <>
+    <SessionProvider session={session}>
       <Head>
         <title>FinalFinder</title>
         <meta
@@ -37,6 +41,6 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </main>
       </div>
-    </>
+    </SessionProvider>
   );
 }
