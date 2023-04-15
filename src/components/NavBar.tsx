@@ -79,15 +79,18 @@ export default function NavBar() {
           FinalFinder
         </a.h1>
       </div>
-      <div className="absolute left-24 items-center justify-between overflow-hidden md:flex md:justify-evenly">
+      <div className="absolute left-24 items-center justify-between overflow-hidden md:hidden">
         {lTransition((style, item) => (
-          <ALink
-            href={item.href}
-            className="relative mx-2 md:text-xl"
-            style={style}
-          >
+          <ALink href={item.href} className="relative mx-2" style={style}>
             {item.text}
           </ALink>
+        ))}
+      </div>
+      <div className="hidden items-center justify-evenly md:flex">
+        {links.map((link) => (
+          <Link href={link.href} className="mx-2 text-xl">
+            {link.text}
+          </Link>
         ))}
       </div>
       <Image
