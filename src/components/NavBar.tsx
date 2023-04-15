@@ -8,28 +8,39 @@ import {
   useTransition,
 } from "@react-spring/web";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 import orpheusFlag from "public/flag-orpheus-top.svg";
 import hamburger from "public/hamburger.svg";
 
-const links = [
-  {
-    href: "/home",
-    text: "Home",
-  },
-  {
-    href: "/edit",
-    text: "Edit Exams",
-  },
-  {
-    href: "/signout",
-    text: "Sign Out",
-  },
-];
-
 const ALink = a(Link);
 
 export default function NavBar() {
+  const { status } = useSession();
+
+  const links =
+    status === "authenticated"
+      ? [
+          {
+            href: "/home",
+            text: "Home",
+          },
+          {
+            href: "/edit",
+            text: "Edit Exams",
+          },
+          {
+            href: "/signout",
+            text: "Sign Out",
+          },
+        ]
+      : [
+          {
+            href: "/signin",
+            text: "Sign In",
+          },
+        ];
+
   const [menuOpen, setMenuOpen] = useState(false);
   const hRef = useSpringRef();
   const hSpring = useSpring({
