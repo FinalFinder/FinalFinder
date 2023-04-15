@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { signIn } from "next-auth/react";
 
 import Button from "@/components/Button";
 import dino from "public/dino.png";
@@ -17,7 +18,7 @@ export default function Home() {
         <div className="mt-2 w-5/6">
           <Button
             onClick={() => {
-              // Link to slack auth
+              signIn("slack");
             }}
           >
             <p className="text-lg md:text-xl">Start Studying</p>
