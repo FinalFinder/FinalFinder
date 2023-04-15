@@ -81,14 +81,19 @@ export default function NavBar() {
       </div>
       <div className="absolute left-24 items-center justify-between overflow-hidden md:hidden">
         {lTransition((style, item) => (
-          <ALink href={item.href} className="relative mx-2" style={style}>
+          <ALink
+            href={item.href}
+            className="relative mx-2"
+            style={style}
+            key={item.text}
+          >
             {item.text}
           </ALink>
         ))}
       </div>
       <div className="hidden items-center justify-evenly md:flex">
         {links.map((link) => (
-          <Link href={link.href} className="mx-2 text-xl">
+          <Link href={link.href} className="mx-2 text-xl" key={link.text}>
             {link.text}
           </Link>
         ))}
