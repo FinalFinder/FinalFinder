@@ -30,6 +30,7 @@ export default function Home() {
         <a
           className="italic underline"
           href="https://github.com/hackclub/dinosaurs/blob/main/Zeo_shark_study_dino.png"
+          target="_blank"
         >
           A drawing of Orpheus studying by Zeo-shark
         </a>
