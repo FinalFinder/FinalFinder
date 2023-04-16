@@ -14,6 +14,7 @@ export default function SignIn() {
       signingIn = false;
       router.push("/");
     });
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <p className="text-center text-2xl">Signing in...</p>;
