@@ -26,7 +26,7 @@ export default function Edit() {
         Welcome, {session.user?.name}!
       </h1>
       <p className="max-w-xs text-center text-lg">
-        Tell us what exams you'll be taking this year
+        Tell us what exams you&apos;ll be taking this year
       </p>
       <div className="my-4 grid w-5/6 grid-cols-5 border-2 border-cyan-1">
         <input
