@@ -1,19 +1,20 @@
 import { useEffect } from "react";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 
+let signingOut = false;
+
 export default function SignOut() {
-  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    signOut({ callbackUrl: "/", redirect: false });
+    if (signingOut) return;
+    signingOut = true;
+    signOut({ redirect: false }).then(() => {
+      signingOut = false;
+      router.push("/");
+    });
   }, []);
 
-  if (status === "unauthenticated") {
-    router.push("/");
-    return null;
-  } else {
-    return <p className="text-center text-2xl">Signing out...</p>;
-  }
+  return <p className="text-center text-2xl">Signing out...</p>;
 }
