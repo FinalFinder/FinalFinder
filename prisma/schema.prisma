@@ -46,6 +46,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  exams Exam[]
 }
 
 model VerificationToken {
@@ -54,4 +56,10 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Exam {
+  name  String   @id
+  date  DateTime
+  users User[]
 }

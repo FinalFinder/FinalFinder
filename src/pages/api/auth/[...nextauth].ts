@@ -12,4 +12,24 @@ export default NextAuth({
       clientSecret: process.env.SLACK_CLIENT_SECRET!,
     }),
   ],
+  callbacks: {
+    async session({ session, user }) {
+      const dbUser = await prisma.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        include: {
+          exams: true,
+        },
+      });
+
+      if (!dbUser) {
+        throw new Error("Unable to fetch session user data");
+      }
+
+      session.user.exams = dbUser.exams;
+
+      return session;
+    },
+  },
 });
