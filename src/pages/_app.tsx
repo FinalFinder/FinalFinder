@@ -4,8 +4,9 @@ import { SessionProvider } from "next-auth/react";
 
 import "@/styles/globals.css";
 import NavBar from "@/components/NavBar";
+import { trpc } from "@/utils/trpc";
 
-import type { AppProps } from "next/app";
+import type { AppProps, AppType } from "next/app";
 
 const secularOne = Secular_One({
   weight: "400",
@@ -18,10 +19,10 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function App({
+const App: AppType = ({
   Component,
   pageProps: { session, ...pageProps },
-}: AppProps) {
+}: AppProps) => {
   return (
     <SessionProvider session={session}>
       <Head>
@@ -43,4 +44,6 @@ export default function App({
       </div>
     </SessionProvider>
   );
-}
+};
+
+export default trpc.withTRPC(App);
