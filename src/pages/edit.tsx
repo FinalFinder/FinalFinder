@@ -25,33 +25,36 @@ export default function Edit() {
       <h1 className="text-center text-2xl font-bold">
         Welcome, {session.user?.name}!
       </h1>
-      <p className="max-w-xs text-center text-lg">
-        Tell us what exams you&apos;ll be taking this year
-      </p>
-      <div className="my-4 grid w-5/6 grid-cols-5 border-2 border-cyan-1">
-        <input
-          className="col-span-4 pl-1 text-black"
-          placeholder="ex. AP Computer Science A"
-          value={examName}
-          onChange={(e) => setExamName(e.target.value)}
-        />
-        <button
-          className="colspan-1 bg-cyan-1 text-center text-2xl"
-          onClick={() => {
-            setExams([
-              ...exams,
-              {
-                name: examName,
-                // TODO: input date
-                date: new Date(),
-              },
-            ]);
-            setExamName("");
-          }}
-        >
-          +
-        </button>
+      <div className="flex w-5/6 flex-col items-center justify-start md:h-16 md:flex-row md:justify-evenly">
+        <p className="max-w-xs text-center text-lg md:max-w-sm md:text-2xl">
+          Tell us what exams you&apos;ll be taking this year
+        </p>
+        <div className="my-4 grid w-5/6 grid-cols-6 border-2 border-cyan-1 md:my-1 md:h-full md:w-3/4 md:border-4">
+          <input
+            className="col-span-5 pl-1 text-black md:h-full"
+            placeholder="ex. AP Computer Science A"
+            value={examName}
+            onChange={(e) => setExamName(e.target.value)}
+          />
+          <button
+            className="colspan-1 bg-cyan-1 text-center text-2xl md:h-full"
+            onClick={() => {
+              setExams([
+                ...exams,
+                {
+                  name: examName,
+                  // TODO: input date
+                  date: new Date(),
+                },
+              ]);
+              setExamName("");
+            }}
+          >
+            +
+          </button>
+        </div>
       </div>
+
       <div className="my-2 flex w-5/6 flex-col items-center justify-between rounded-md bg-gray-2 p-2">
         {exams.length === 0 ? (
           <p className="text-center text-lg">
