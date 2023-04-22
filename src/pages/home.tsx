@@ -64,7 +64,9 @@ export default function Home() {
             <Exam
               key={exam.name}
               name={exam.name}
+              slug={exam.slug}
               date={new Date(dateStr ?? "")}
+              clickable
             />
           );
         })}
