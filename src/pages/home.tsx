@@ -1,6 +1,8 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
+import { trpc } from "@/utils/trpc";
+
 export default function Home() {
   const router = useRouter();
   const { data: session } = useSession({
@@ -10,7 +12,9 @@ export default function Home() {
     },
   });
 
-  if (session?.user.exams.length === 0) {
+  const userExams = trpc.userExams.useQuery();
+
+  if (userExams.isSuccess && userExams.data?.length === 0) {
     router.push("/edit");
   }
 
