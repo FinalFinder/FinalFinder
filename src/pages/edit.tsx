@@ -94,20 +94,32 @@ export default function Edit() {
             onClick={async () => {
               if (examDate === "" || examName === "") return;
 
+              const tzo = new Date().getTimezoneOffset();
+              const tz = Math.abs(tzo);
+              const date = new Date(
+                examDate +
+                  "T00:00:00" +
+                  (tzo < 0 ? "+" : "-") +
+                  (Number((tz / 60).toFixed(0)) < 10
+                    ? `0${Number((tz / 60).toFixed(0)).toFixed(0)}`
+                    : Number((tz / 60).toFixed(0)).toFixed(0)) +
+                  (tz % 60 < 10
+                    ? `0${(tz % 60).toFixed(0)}`
+                    : (tz % 60).toFixed(0))
+              );
+
               const index = allExams.data?.findIndex(
                 (e) => e.name === examName
               );
               if (!index || index === -1) {
-                createExam
-                  .mutateAsync({ date: new Date(examDate), name: examName })
-                  .then(() => {
-                    allExams.refetch();
-                    userExams.refetch();
-                  });
+                createExam.mutateAsync({ date, name: examName }).then(() => {
+                  allExams.refetch();
+                  userExams.refetch();
+                });
               } else {
                 addUserExam
                   .mutateAsync({
-                    date: new Date(examDate),
+                    date,
                     exam: examName,
                   })
                   .then(() => {
