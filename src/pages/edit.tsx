@@ -140,6 +140,7 @@ export default function Edit() {
               <Exam
                 key={exam.name}
                 name={exam.name}
+                slug={exam.slug}
                 date={new Date(dateStr ?? "")}
               />
             );

@@ -43,6 +43,7 @@ export const appRouter = router({
       const exam = await prisma.exam.create({
         data: {
           name: input.name,
+          slug: input.name.trim().toLowerCase().replace(/\s+/g, "-"),
           users: {
             connect: { id: ctx.session.user.id },
           },
@@ -126,6 +127,28 @@ export const appRouter = router({
           },
         });
       }
+    }),
+  getExam: protectedProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      return await prisma.exam.findUnique({
+        where: {
+          slug: input.slug,
+        },
+        include: {
+          dates: {
+            include: {
+              users: true,
+            },
+          },
+          users: true,
+          sessions: true,
+        },
+      });
     }),
   userExams: protectedProcedure.query(async ({ ctx }) => {
     return await getUserExams(ctx.session.user.id);

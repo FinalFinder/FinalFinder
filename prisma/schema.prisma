@@ -61,6 +61,7 @@ model VerificationToken {
 
 model Exam {
   name     String         @id
+  slug     String         @unique
   dates    ExamDate[]
   users    User[]
   sessions StudySession[]

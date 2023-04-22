@@ -5,12 +5,12 @@ import { trpc } from "@/utils/trpc";
 import Button from "@/components/Button";
 
 export default function CreateSession() {
-  const [examName, setExamName] = useState("");
   const [sessionDate, setSessionDate] = useState("");
   const router = useRouter();
 
   const userExams = trpc.userExams.useQuery();
   const createSession = trpc.createSession.useMutation();
+  const [examName, setExamName] = useState(userExams.data?.[0].name ?? "");
 
   return (
     <div className="flex flex-col items-center justify-start">
