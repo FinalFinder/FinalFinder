@@ -4,7 +4,7 @@ datasource db {
 }
 
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 model Account {
@@ -60,9 +60,10 @@ model VerificationToken {
 }
 
 model Exam {
-  name  String     @id
-  dates ExamDate[]
-  users User[]
+  name     String         @id
+  dates    ExamDate[]
+  users    User[]
+  sessions StudySession[]
 }
 
 model ExamDate {
@@ -84,4 +85,11 @@ model ExamDatesOnUsers {
   examDateExamName String
 
   @@id([examDateId, userId])
+}
+
+model StudySession {
+  id       String   @id @default(cuid())
+  exam     Exam     @relation(fields: [examName], references: [name])
+  time     DateTime
+  examName String
 }
