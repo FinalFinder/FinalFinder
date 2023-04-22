@@ -62,7 +62,7 @@ export default function Edit() {
             style={{
               display: showSuggestions ? "block" : "none",
             }}
-            className="absolute top-full z-10 max-h-40 w-2/5 overflow-y-auto rounded-b border-2 border-t-0 border-cyan-2 bg-cyan-1 p-1"
+            className="absolute top-full z-10 max-h-40 w-full overflow-y-auto rounded-b border-2 border-t-0 border-cyan-2 bg-cyan-1 p-1 md:w-2/5"
           >
             {filteredExams?.map((exam) => (
               <option
