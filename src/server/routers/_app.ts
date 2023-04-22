@@ -128,7 +128,7 @@ export const appRouter = router({
       }
     }),
   userExams: protectedProcedure.query(async ({ ctx }) => {
-    return getUserExams(ctx.session.user.id);
+    return await getUserExams(ctx.session.user.id);
   }),
   createSession: protectedProcedure
     .input(
