@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import Button from "@/components/Button";
+import Exam from "@/components/Exam";
 import { trpc } from "@/utils/trpc";
 
 export default function Edit() {
@@ -136,15 +137,11 @@ export default function Edit() {
             )?.date;
 
             return (
-              <div
-                className="my-2 w-full rounded-md bg-blue p-2"
+              <Exam
                 key={exam.name}
-              >
-                <p className="font-bold">{exam.name}</p>
-                <p className="text-lg">
-                  {dateStr ? new Date(dateStr).toDateString() : ""}
-                </p>
-              </div>
+                name={exam.name}
+                date={new Date(dateStr ?? "")}
+              />
             );
           })
         )}
