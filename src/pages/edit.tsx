@@ -5,12 +5,9 @@ import { useState } from "react";
 import Button from "@/components/Button";
 import { trpc } from "@/utils/trpc";
 
-import type Exam from "@/data/Exam";
-
 export default function Edit() {
   const [examName, setExamName] = useState<string>("");
   const [examDate, setExamDate] = useState<string>("");
-  const [exams, setExams] = useState<Exam[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const router = useRouter();
   const { status, data: session } = useSession({
@@ -19,7 +16,11 @@ export default function Edit() {
       router.push("/signin");
     },
   });
+
+  const userExams = trpc.userExams.useQuery();
   const allExams = trpc.allExams.useQuery();
+  const createExam = trpc.createExam.useMutation();
+  const addUserExam = trpc.addUserToExam.useMutation();
 
   const filteredExams = allExams.data?.filter((exam) =>
     exam.name.toUpperCase().startsWith(examName.toUpperCase())
@@ -69,7 +70,6 @@ export default function Edit() {
                 className="block rounded-md p-2 text-lg text-white hover:bg-cyan-2"
                 onClick={() => {
                   setExamName(exam.name);
-                  setExamDate(exam.date.split("T")[0]);
                 }}
               >
                 {exam.name}
@@ -90,14 +90,30 @@ export default function Edit() {
 
         <div className="my-2 w-5/6 md:w-3/4">
           <Button
-            onClick={() => {
-              setExams([
-                ...exams,
-                {
-                  name: examName,
-                  date: new Date(examDate),
-                },
-              ]);
+            onClick={async () => {
+              if (examDate === "" || examName === "") return;
+
+              const index = allExams.data?.findIndex(
+                (e) => e.name === examName
+              );
+              if (!index || index === -1) {
+                createExam
+                  .mutateAsync({ date: new Date(examDate), name: examName })
+                  .then(() => {
+                    allExams.refetch();
+                    userExams.refetch();
+                  });
+              } else {
+                addUserExam
+                  .mutateAsync({
+                    date: new Date(examDate),
+                    exam: examName,
+                  })
+                  .then(() => {
+                    userExams.refetch();
+                  });
+              }
+
               setExamName("");
               setExamDate("");
             }}
@@ -108,27 +124,30 @@ export default function Edit() {
       </div>
 
       <div className="my-2 flex w-5/6 flex-col items-center justify-between rounded-md bg-gray-2 p-2">
-        {exams.length === 0 ? (
+        {!userExams.data || userExams.data?.length === 0 ? (
           <p className="text-center text-lg">
             Add an exam using the above form
           </p>
         ) : (
-          exams.map((exam) => (
-            <div className="my-2 w-full rounded-md bg-blue p-2" key={exam.name}>
-              <p className="font-bold">{exam.name}</p>
-              <p className="text-lg">{exam.date.toDateString()}</p>
-            </div>
-          ))
+          userExams.data?.map((exam) => {
+            const dateStr = exam.dates.find(
+              (d) =>
+                d.users.findIndex((u) => u.userId === session.user.id) !== -1
+            )?.date;
+
+            return (
+              <div
+                className="my-2 w-full rounded-md bg-blue p-2"
+                key={exam.name}
+              >
+                <p className="font-bold">{exam.name}</p>
+                <p className="text-lg">
+                  {dateStr ? new Date(dateStr).toDateString() : ""}
+                </p>
+              </div>
+            );
+          })
         )}
-      </div>
-      <div className="my-2 w-5/6">
-        <Button
-          onClick={() => {
-            // TODO: save exams to db
-          }}
-        >
-          <p className="text-lg">Save</p>
-        </Button>
       </div>
     </div>
   );

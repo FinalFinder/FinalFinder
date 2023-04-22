@@ -1,11 +1,11 @@
 import { DefaultSession } from "next-auth";
 
-import Exam from "@/data/Exam";
+import type { Exam, ExamDate, User } from "@prisma/client";
 
 declare module "next-auth" {
   interface Session {
     user: {
-      exams: Exam[];
+      id: string;
     } & DefaultSession["user"];
   }
 }

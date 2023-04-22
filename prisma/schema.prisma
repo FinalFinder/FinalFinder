@@ -4,7 +4,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
 }
 
 model Account {
@@ -47,7 +47,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  exams Exam[]
+  exams     Exam[]
+  examDates ExamDatesOnUsers[]
 }
 
 model VerificationToken {
@@ -59,7 +60,28 @@ model VerificationToken {
 }
 
 model Exam {
-  name  String   @id
-  date  DateTime
+  name  String     @id
+  dates ExamDate[]
   users User[]
+}
+
+model ExamDate {
+  id       String             @unique @default(cuid())
+  date     DateTime
+  users    ExamDatesOnUsers[]
+  exam     Exam               @relation(fields: [examName], references: [name])
+  examName String
+
+  @@id([date, examName])
+}
+
+model ExamDatesOnUsers {
+  examDateId       String
+  examDate         ExamDate @relation(fields: [examDateDate, examDateExamName], references: [date, examName])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  examDateDate     DateTime
+  examDateExamName String
+
+  @@id([examDateId, userId])
 }

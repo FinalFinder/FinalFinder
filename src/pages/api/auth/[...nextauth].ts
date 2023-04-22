@@ -19,16 +19,13 @@ export const authOpts: NextAuthOptions = {
         where: {
           id: user.id,
         },
-        include: {
-          exams: true,
-        },
       });
 
       if (!dbUser) {
         throw new Error("Unable to fetch session user data");
       }
 
-      session.user.exams = dbUser.exams;
+      session.user.id = dbUser.id;
 
       return session;
     },
