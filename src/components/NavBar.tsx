@@ -15,31 +15,32 @@ import hamburger from "public/hamburger.svg";
 
 const ALink = a(Link);
 
+const authLinks = [
+  {
+    href: "/home",
+    text: "Home",
+  },
+  {
+    href: "/edit",
+    text: "Edit Exams",
+  },
+  {
+    href: "/signout",
+    text: "Sign Out",
+  },
+];
+
+const unauthLinks = [
+  {
+    href: "/signin",
+    text: "Sign In",
+  },
+];
+
 export default function NavBar() {
   const { status } = useSession();
 
-  const links =
-    status === "authenticated"
-      ? [
-          {
-            href: "/home",
-            text: "Home",
-          },
-          {
-            href: "/edit",
-            text: "Edit Exams",
-          },
-          {
-            href: "/signout",
-            text: "Sign Out",
-          },
-        ]
-      : [
-          {
-            href: "/signin",
-            text: "Sign In",
-          },
-        ];
+  const links = status === "authenticated" ? authLinks : unauthLinks;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const hRef = useSpringRef();
