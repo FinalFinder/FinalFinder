@@ -3,6 +3,31 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 import prisma from "@/db/prisma";
 
+import type { StudySession } from "@prisma/client";
+
+async function getUserExams(userId: string) {
+  return (
+    await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        exams: {
+          include: {
+            dates: {
+              include: {
+                users: true,
+              },
+            },
+            users: true,
+            sessions: true,
+          },
+        },
+      },
+    })
+  )?.exams;
+}
+
 export const appRouter = router({
   allExams: protectedProcedure.query(async () => {
     return await prisma.exam.findMany();
@@ -103,25 +128,41 @@ export const appRouter = router({
       }
     }),
   userExams: protectedProcedure.query(async ({ ctx }) => {
-    return (
-      await prisma.user.findUnique({
-        where: {
-          id: ctx.session.user.id,
-        },
-        select: {
-          exams: {
-            include: {
-              dates: {
-                include: {
-                  users: true,
-                },
-              },
-              users: true,
-            },
-          },
-        },
+    return getUserExams(ctx.session.user.id);
+  }),
+  createSession: protectedProcedure
+    .input(
+      z.object({
+        exam: z.string(),
+        time: z.date(),
       })
-    )?.exams;
+    )
+    .mutation(async ({ input, ctx }) => {
+      await prisma.studySession.create({
+        data: {
+          exam: {
+            connect: { name: input.exam },
+          },
+          time: input.time,
+        },
+      });
+    }),
+  userSessions: protectedProcedure.query(async ({ ctx }) => {
+    const userExams = await getUserExams(ctx.session.user.id);
+    if (!userExams) return [];
+    let sessions: StudySession[] = [];
+
+    for (const exam of userExams) {
+      for (const session of exam.sessions) {
+        sessions.push(session);
+      }
+    }
+
+    sessions = sessions.filter((session) => session.time >= new Date());
+
+    sessions = sessions.sort((a, b) => a.time.valueOf() - b.time.valueOf());
+
+    return sessions;
   }),
 });
 
