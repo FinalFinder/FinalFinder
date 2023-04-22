@@ -1,11 +1,10 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DIRECT_DB_URL")
-  // directUrl = env("DIRECT_DB_URL")
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
 }
 
 model Account {
@@ -47,6 +46,9 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  exams     Exam[]
+  examDates ExamDatesOnUsers[]
 }
 
 model VerificationToken {
@@ -55,4 +57,31 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Exam {
+  name  String     @id
+  dates ExamDate[]
+  users User[]
+}
+
+model ExamDate {
+  id       String             @unique @default(cuid())
+  date     DateTime
+  users    ExamDatesOnUsers[]
+  exam     Exam               @relation(fields: [examName], references: [name])
+  examName String
+
+  @@id([date, examName])
+}
+
+model ExamDatesOnUsers {
+  examDateId       String
+  examDate         ExamDate @relation(fields: [examDateDate, examDateExamName], references: [date, examName])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  examDateDate     DateTime
+  examDateExamName String
+
+  @@id([examDateId, userId])
 }
