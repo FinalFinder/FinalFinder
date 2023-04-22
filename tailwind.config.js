@@ -9,6 +9,8 @@ module.exports = {
         "cyan-1": "#009999",
         "cyan-2": "#006666",
         blue: "#1C4F82",
+        orange: "#CF6708",
+        yellow: "#FFB800"
       },
       fontFamily: {
         "secular-one": ["var(--font-secular-one)", "serif"],

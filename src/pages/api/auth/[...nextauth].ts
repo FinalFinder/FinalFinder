@@ -3,8 +3,9 @@ import SlackProvider from "next-auth/providers/slack";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 import prisma from "../../../db/prisma";
+import type { NextAuthOptions } from "next-auth";
 
-export default NextAuth({
+export const authOpts: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     SlackProvider({
@@ -32,4 +33,6 @@ export default NextAuth({
       return session;
     },
   },
-});
+};
+
+export default NextAuth(authOpts);
