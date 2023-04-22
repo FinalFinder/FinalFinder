@@ -150,13 +150,17 @@ export const appRouter = router({
   userSessions: protectedProcedure.query(async ({ ctx }) => {
     const userExams = await getUserExams(ctx.session.user.id);
     if (!userExams) return [];
-    const sessions: StudySession[] = [];
+    let sessions: StudySession[] = [];
 
     for (const exam of userExams) {
       for (const session of exam.sessions) {
         sessions.push(session);
       }
     }
+
+    sessions = sessions.filter((session) => session.time >= new Date());
+
+    sessions = sessions.sort((a, b) => a.time.valueOf() - b.time.valueOf());
 
     return sessions;
   }),
