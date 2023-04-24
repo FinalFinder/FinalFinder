@@ -5,6 +5,11 @@ import prisma from "@/db/prisma";
 
 import type { StudySession } from "@prisma/client";
 
+const slackPostHeaders = {
+  "Content-Type": "application/json; charset=utf-8",
+  Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+};
+
 async function getUserExams(userId: string) {
   return (
     await prisma.user.findUnique({
@@ -40,10 +45,38 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const examSlug = input.name.trim().toLowerCase().replace(/\s+/g, "-");
+
+      // Create slack channel
+      const createRes = await fetch(
+        "https://slack.com/api/conversations.create",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            name: `exam-${examSlug}`,
+          }),
+          headers: slackPostHeaders,
+        }
+      );
+
+      // Invite user
+      const channel = await createRes.json();
+
+      await fetch("https://slack.com/api/conversations.invite", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: channel.channel.id,
+          users: ctx.session.user.slackId,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Store in db
       const exam = await prisma.exam.create({
         data: {
           name: input.name,
           slug: input.name.trim().toLowerCase().replace(/\s+/g, "-"),
+          slackId: channel.channel.id,
           users: {
             connect: { id: ctx.session.user.id },
           },
@@ -127,6 +160,21 @@ export const appRouter = router({
           },
         });
       }
+
+      const exam = await prisma.exam.findUnique({
+        where: {
+          name: input.exam,
+        },
+      });
+
+      await fetch("https://slack.com/api/conversations.invite", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: exam!.slackId,
+          users: ctx.session.user.slackId,
+        }),
+        headers: slackPostHeaders,
+      });
     }),
   getExam: protectedProcedure
     .input(
