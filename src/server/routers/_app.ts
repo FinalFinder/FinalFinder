@@ -53,15 +53,15 @@ export const appRouter = router({
         {
           method: "POST",
           body: JSON.stringify({
-            name: `exam-${examSlug}`,
+            name: `${examSlug}-exam`,
           }),
           headers: slackPostHeaders,
         }
       );
 
-      // Invite user
       const channel = await createRes.json();
 
+      // Invite user to channel
       await fetch("https://slack.com/api/conversations.invite", {
         method: "POST",
         body: JSON.stringify({
@@ -71,7 +71,6 @@ export const appRouter = router({
         headers: slackPostHeaders,
       });
 
-      // Store in db
       const exam = await prisma.exam.create({
         data: {
           name: input.name,
@@ -209,13 +208,55 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await prisma.studySession.create({
+      const studySession = await prisma.studySession.create({
         data: {
           exam: {
             connect: { name: input.exam },
           },
           time: input.time,
         },
+      });
+
+      const exam = await prisma.exam.findUnique({
+        where: {
+          name: input.exam,
+        },
+      });
+
+      // schedule 5 minutes message
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: exam?.slackId,
+          post_at: studySession.time.valueOf() / 1000 - 5 * 60,
+          text: `_*:rotating_light: INCOMING STUDY SESSION :rotating_light:*_\nGet your notes, music, and snacks ready, because a study session for *${input.exam}* is starting in *5 minutes*!\nJoin the huddle in this channel when you're ready!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // schedule session start message
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: exam?.slackId,
+          post_at: studySession.time.valueOf() / 1000,
+          text: `_*:quad_parrot: IT'S STUDYING TIME :quad_parrot:*_\nHey <!channel>, the study session for *${input.exam}* is starting *now*!\nJoin the huddle in this channel when you're ready!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // send scheduled message
+      await fetch("https://slack.com/api/chat.postMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: exam?.slackId,
+          text: `:calendar: A study session for *${
+            input.exam
+          }* has been scheduled for *<!date^${
+            studySession.time.valueOf() / 1000
+          }^{date_long_pretty} at {time}|${studySession.time.toLocaleString()}>*!`,
+        }),
+        headers: slackPostHeaders,
       });
     }),
   userSessions: protectedProcedure.query(async ({ ctx }) => {
