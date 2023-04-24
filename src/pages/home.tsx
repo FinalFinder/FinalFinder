@@ -19,6 +19,44 @@ export default function Home() {
   const userExams = trpc.userExams.useQuery();
   const userSessions = trpc.userSessions.useQuery();
 
+  if (userExams.error)
+    return (
+      <p className="m-2 rounded-md bg-red-600 p-2 text-2xl">
+        Uh oh, there was an error fetching your exams. Please try refreshing. If
+        the issue persists,{" "}
+        <a
+          href="https://github.com/polypixeldev/FinalFinder/issues/new"
+          target="_blank"
+          className="text-white underline"
+        >
+          file an issue on our GitHub
+        </a>{" "}
+        and include the following error message: <br />
+        <code className="mt-2 block w-full rounded-md bg-gray-2 p-1 text-white">
+          {userExams.error.message ?? "amog"}
+        </code>
+      </p>
+    );
+
+  if (userSessions.error)
+    return (
+      <p className="m-2 rounded-md bg-red-600 p-2 text-2xl">
+        Uh oh, there was an error fetching your study sessions. Please try
+        refreshing. If the issue persists,{" "}
+        <a
+          href="https://github.com/polypixeldev/FinalFinder/issues/new"
+          target="_blank"
+          className="text-white underline"
+        >
+          file an issue on our GitHub
+        </a>{" "}
+        and include the following error message: <br />
+        <code className="mt-2 block w-full rounded-md bg-gray-2 p-1 text-white">
+          {userSessions.error.message ?? "amog"}
+        </code>
+      </p>
+    );
+
   if (userExams.isSuccess && userExams.data?.length === 0) {
     router.push("/edit");
     return null;
