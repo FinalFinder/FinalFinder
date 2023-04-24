@@ -11,6 +11,15 @@ export const authOpts: NextAuthOptions = {
     SlackProvider({
       clientId: process.env.SLACK_CLIENT_ID!,
       clientSecret: process.env.SLACK_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          slackId: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
   ],
   callbacks: {
@@ -21,11 +30,12 @@ export const authOpts: NextAuthOptions = {
         },
       });
 
-      if (!dbUser) {
-        throw new Error("Unable to fetch session user data");
+      if (!dbUser || !dbUser.slackId) {
+        throw new Error("Error in fetching session user data");
       }
 
       session.user.id = dbUser.id;
+      session.user.slackId = dbUser.slackId;
 
       return session;
     },
