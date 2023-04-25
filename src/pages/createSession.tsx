@@ -14,6 +14,7 @@ export default function CreateSession() {
     },
   });
   const [sessionDate, setSessionDate] = useState("");
+  const [invalid, setInvalid] = useState(false);
   const router = useRouter();
 
   const userExams = trpc.userExams.useQuery();
@@ -51,6 +52,11 @@ export default function CreateSession() {
           Creating study session...
         </p>
       )}
+      {invalid && (
+        <p className="m-2 w-5/6 rounded-md bg-red-600 p-2 text-2xl md:w-3/4">
+          Invalid exam or date + time
+        </p>
+      )}
       <div className="flex w-5/6 flex-col items-center justify-start md:w-3/4 md:justify-evenly">
         <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
           <select
@@ -83,7 +89,11 @@ export default function CreateSession() {
         <div className="my-2 w-full">
           <Button
             onClick={async () => {
-              if (sessionDate === "" || examName === "") return;
+              if (sessionDate === "" || examName === "") {
+                setInvalid(true);
+                return;
+              }
+              setInvalid(false);
 
               createSession
                 .mutateAsync({
