@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Button from "@/components/Button";
 import Exam from "@/components/Exam";
+import ErrorComponent from "@/components/Error";
 import { trpc } from "@/utils/trpc";
 
 export default function Edit() {
@@ -22,6 +23,40 @@ export default function Edit() {
   const allExams = trpc.allExams.useQuery();
   const createExam = trpc.createExam.useMutation();
   const addUserExam = trpc.addUserToExam.useMutation();
+
+  if (userExams.error)
+    return (
+      <ErrorComponent
+        error="fetching your exams"
+        message={userExams.error.message}
+      />
+    );
+
+  if (allExams.error)
+    return (
+      <ErrorComponent
+        error="fetching all exams"
+        message={allExams.error.message}
+      />
+    );
+
+  if (createExam.error) {
+    return (
+      <ErrorComponent
+        error="creating the exam"
+        message={createExam.error.message}
+      />
+    );
+  }
+
+  if (addUserExam.error) {
+    return (
+      <ErrorComponent
+        error="adding you to the exam"
+        message={addUserExam.error.message}
+      />
+    );
+  }
 
   const filteredExams = allExams.data?.filter((exam) =>
     exam.name.toUpperCase().startsWith(examName.toUpperCase())
