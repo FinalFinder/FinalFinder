@@ -10,7 +10,7 @@ import { trpc } from "@/utils/trpc";
 
 export default function Home() {
   const router = useRouter();
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       router.push("/signin");
@@ -19,6 +19,13 @@ export default function Home() {
 
   const userExams = trpc.userExams.useQuery();
   const userSessions = trpc.userSessions.useQuery();
+
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
 
   if (userExams.error)
     return (

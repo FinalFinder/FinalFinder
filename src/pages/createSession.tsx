@@ -1,17 +1,31 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 
 import { trpc } from "@/utils/trpc";
 import Button from "@/components/Button";
 import ErrorComponent from "@/components/Error";
 
 export default function CreateSession() {
+  const { status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/signin");
+    },
+  });
   const [sessionDate, setSessionDate] = useState("");
   const router = useRouter();
 
   const userExams = trpc.userExams.useQuery();
   const createSession = trpc.createSession.useMutation();
   const [examName, setExamName] = useState(userExams.data?.[0].name ?? "");
+
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
 
   if (userExams.error)
     return (

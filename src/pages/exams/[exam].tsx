@@ -8,7 +8,7 @@ import StudySession from "@/components/Session";
 import ErrorComponent from "@/components/Error";
 
 export default function Exam() {
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       router.push("/signin");
@@ -20,6 +20,13 @@ export default function Exam() {
   const exam = trpc.getExam.useQuery({
     slug: Array.isArray(examSlug) ? "" : examSlug ?? "",
   });
+
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
 
   if (exam.error)
     return (

@@ -24,6 +24,13 @@ export default function Edit() {
   const createExam = trpc.createExam.useMutation();
   const addUserExam = trpc.addUserToExam.useMutation();
 
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
+
   if (userExams.error)
     return (
       <ErrorComponent
@@ -61,9 +68,6 @@ export default function Edit() {
   const filteredExams = allExams.data?.filter((exam) =>
     exam.name.toUpperCase().startsWith(examName.toUpperCase())
   );
-
-  if (status !== "authenticated")
-    return <p className="text-center text-2xl">Loading...</p>;
 
   return (
     <div className="flex flex-col items-center justify-start">
