@@ -37,8 +37,8 @@ export default function CreateSession() {
           Creating study session...
         </p>
       )}
-      <div className="flex w-full flex-col items-center justify-start md:justify-evenly">
-        <div className="relative my-4 h-16 w-5/6 border-2 border-cyan-1 md:my-1 md:w-3/4 md:border-4">
+      <div className="flex w-5/6 flex-col items-center justify-start md:w-3/4 md:justify-evenly">
+        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
           <select
             className="peer h-full w-full pl-1 text-black outline-none"
             value={examName}
@@ -56,7 +56,7 @@ export default function CreateSession() {
           </select>
         </div>
 
-        <div className="relative my-4 h-16 w-5/6 border-2 border-cyan-1 md:my-1 md:w-3/4 md:border-4">
+        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
           <input
             className="peer h-full w-full pl-1 text-black outline-none"
             placeholder="Date"
@@ -66,7 +66,7 @@ export default function CreateSession() {
           />
         </div>
 
-        <div className="my-2 w-5/6 md:w-3/4">
+        <div className="my-2 w-full">
           <Button
             onClick={async () => {
               if (sessionDate === "" || examName === "") return;

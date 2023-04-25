@@ -38,7 +38,7 @@ export default function Exam() {
           ?.date.toLocaleDateString()}
       </p>
 
-      <div className="my-2 w-5/6">
+      <div className="my-2 w-5/6 md:w-3/4">
         <Button
           onClick={() => {
             // TODO: direct to slack channel
@@ -48,9 +48,9 @@ export default function Exam() {
         </Button>
       </div>
 
-      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2">
+      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">People</h2>
-        <div className="flex flex-row flex-wrap items-center justify-start">
+        <div className="flex w-full flex-row flex-wrap items-center justify-start">
           {exam.data?.users.map((user) => (
             <div
               key={user.id}
@@ -71,7 +71,7 @@ export default function Exam() {
         </div>
       </div>
 
-      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2">
+      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">Study Sessions</h2>
         <div className="my-2 w-full">
           {exam.data?.sessions.map((session) => {
