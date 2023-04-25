@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { trpc } from "@/utils/trpc";
 import Button from "@/components/Button";
+import ErrorComponent from "@/components/Error";
 
 export default function CreateSession() {
   const [sessionDate, setSessionDate] = useState("");
@@ -11,6 +12,22 @@ export default function CreateSession() {
   const userExams = trpc.userExams.useQuery();
   const createSession = trpc.createSession.useMutation();
   const [examName, setExamName] = useState(userExams.data?.[0].name ?? "");
+
+  if (userExams.error)
+    return (
+      <ErrorComponent
+        error="fetching your exams"
+        message={userExams.error.message}
+      />
+    );
+
+  if (createSession.error)
+    return (
+      <ErrorComponent
+        error="creating the study session"
+        message={createSession.error.message}
+      />
+    );
 
   return (
     <div className="flex flex-col items-center justify-start">
