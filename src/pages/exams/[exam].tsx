@@ -23,9 +23,11 @@ export default function Exam() {
 
   if (status !== "authenticated")
     return (
-      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
-        Loading...
-      </p>
+      <div className="flex w-full flex-col items-center justify-start">
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-center text-2xl md:w-3/4">
+          Loading...
+        </p>
+      </div>
     );
 
   if (exam.error)
