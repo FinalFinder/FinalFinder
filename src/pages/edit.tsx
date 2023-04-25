@@ -67,6 +67,16 @@ export default function Edit() {
 
   return (
     <div className="flex flex-col items-center justify-start">
+      {createExam.isLoading && (
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+          Creating exam...
+        </p>
+      )}
+      {addUserExam.isLoading && (
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+          Adding you to the exam...
+        </p>
+      )}
       <h1 className="text-center text-2xl font-bold">
         Welcome, {session.user?.name}!
       </h1>
