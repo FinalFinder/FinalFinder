@@ -50,7 +50,10 @@ export default function Exam() {
       <div className="my-2 w-5/6 md:w-3/4">
         <Button
           onClick={() => {
-            // TODO: direct to slack channel
+            window.open(
+              `${process.env.NEXT_PUBLIC_SLACK_WORKSPACE_URL}/channels/${exam.data?.slug}-exam`,
+              "_blank"
+            );
           }}
         >
           <p className="text-center text-lg">Slack Channel</p>
