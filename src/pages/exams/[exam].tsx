@@ -5,6 +5,7 @@ import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import Button from "@/components/Button";
 import StudySession from "@/components/Session";
+import ErrorComponent from "@/components/Error";
 
 export default function Exam() {
   const { data: session } = useSession({
@@ -19,6 +20,12 @@ export default function Exam() {
   const exam = trpc.getExam.useQuery({
     slug: Array.isArray(examSlug) ? "" : examSlug ?? "",
   });
+
+  if (exam.error)
+    return (
+      <ErrorComponent error="fetching the exam" message={exam.error.message} />
+    );
+
   return (
     <div className="flex flex-col items-center justify-start">
       <h1 className="text-center text-2xl font-bold">{exam.data?.name}</h1>
