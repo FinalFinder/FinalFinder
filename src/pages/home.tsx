@@ -4,12 +4,13 @@ import { useRouter } from "next/router";
 import Exam from "@/components/Exam";
 import Button from "@/components/Button";
 import StudySession from "@/components/Session";
+import ErrorComponent from "@/components/Error";
 
 import { trpc } from "@/utils/trpc";
 
 export default function Home() {
   const router = useRouter();
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       router.push("/signin");
@@ -18,6 +19,29 @@ export default function Home() {
 
   const userExams = trpc.userExams.useQuery();
   const userSessions = trpc.userSessions.useQuery();
+
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
+
+  if (userExams.error)
+    return (
+      <ErrorComponent
+        error="fetching your exams"
+        message={userExams.error.message}
+      />
+    );
+
+  if (userSessions.error)
+    return (
+      <ErrorComponent
+        error="fetching your study sessions"
+        message={userSessions.error.message}
+      />
+    );
 
   if (userExams.isSuccess && userExams.data?.length === 0) {
     router.push("/edit");
@@ -52,7 +76,7 @@ export default function Home() {
         Welcome back, {session?.user?.name}!
       </h1>
 
-      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2">
+      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">Upcoming Exams</h2>
         {sortedExams?.map((exam) => {
           const dateStr = exam.dates.find(
@@ -72,7 +96,7 @@ export default function Home() {
         })}
       </div>
 
-      <div className="my-2 flex w-5/6 flex-col items-center justify-start rounded-md bg-gray-2 p-2">
+      <div className="my-2 flex w-5/6 flex-col items-center justify-start rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">Study Sessions</h2>
 
         <div className="my-2 w-full">

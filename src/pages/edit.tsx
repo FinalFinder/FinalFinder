@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Button from "@/components/Button";
 import Exam from "@/components/Exam";
+import ErrorComponent from "@/components/Error";
 import { trpc } from "@/utils/trpc";
 
 export default function Edit() {
@@ -23,23 +24,71 @@ export default function Edit() {
   const createExam = trpc.createExam.useMutation();
   const addUserExam = trpc.addUserToExam.useMutation();
 
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
+
+  if (userExams.error)
+    return (
+      <ErrorComponent
+        error="fetching your exams"
+        message={userExams.error.message}
+      />
+    );
+
+  if (allExams.error)
+    return (
+      <ErrorComponent
+        error="fetching all exams"
+        message={allExams.error.message}
+      />
+    );
+
+  if (createExam.error) {
+    return (
+      <ErrorComponent
+        error="creating the exam"
+        message={createExam.error.message}
+      />
+    );
+  }
+
+  if (addUserExam.error) {
+    return (
+      <ErrorComponent
+        error="adding you to the exam"
+        message={addUserExam.error.message}
+      />
+    );
+  }
+
   const filteredExams = allExams.data?.filter((exam) =>
     exam.name.toUpperCase().startsWith(examName.toUpperCase())
   );
 
-  if (status !== "authenticated")
-    return <p className="text-center text-2xl">Loading...</p>;
-
   return (
     <div className="flex flex-col items-center justify-start">
+      {createExam.isLoading && (
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+          Creating exam...
+        </p>
+      )}
+      {addUserExam.isLoading && (
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+          Adding you to the exam...
+        </p>
+      )}
       <h1 className="text-center text-2xl font-bold">
         Welcome, {session.user?.name}!
       </h1>
-      <div className="flex w-5/6 flex-col items-center justify-start md:justify-evenly">
-        <p className="w-5/6 text-center text-lg md:text-2xl">
+      <div className="flex w-5/6 flex-col items-center justify-start md:w-3/4 md:justify-evenly">
+        <p className="w-full text-center text-lg md:text-2xl">
           Tell us what exams you&apos;ll be taking this year
         </p>
-        <div className="relative my-4 h-16 w-5/6 border-2 border-cyan-1 md:my-1 md:w-3/4 md:border-4">
+        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
           <input
             className="peer h-full w-full pl-1 text-black outline-none"
             placeholder="ex. AP Computer Science A"
@@ -79,7 +128,7 @@ export default function Edit() {
           </datalist>
         </div>
 
-        <div className="relative my-4 h-16 w-5/6 border-2 border-cyan-1 md:my-1 md:w-3/4 md:border-4">
+        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
           <input
             className="peer h-full w-full pl-1 text-black outline-none"
             placeholder="Date"
@@ -89,7 +138,7 @@ export default function Edit() {
           />
         </div>
 
-        <div className="my-2 w-5/6 md:w-3/4">
+        <div className="my-2 w-full">
           <Button
             onClick={async () => {
               if (examDate === "" || examName === "") return;
@@ -136,7 +185,7 @@ export default function Edit() {
         </div>
       </div>
 
-      <div className="my-2 flex w-5/6 flex-col items-center justify-between rounded-md bg-gray-2 p-2">
+      <div className="my-2 flex w-5/6 flex-col items-center justify-between rounded-md bg-gray-2 p-2 md:w-3/4">
         {!userExams.data || userExams.data?.length === 0 ? (
           <p className="text-center text-lg">
             Add an exam using the above form

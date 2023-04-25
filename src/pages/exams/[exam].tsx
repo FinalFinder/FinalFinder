@@ -5,9 +5,10 @@ import Image from "next/image";
 import { trpc } from "@/utils/trpc";
 import Button from "@/components/Button";
 import StudySession from "@/components/Session";
+import ErrorComponent from "@/components/Error";
 
 export default function Exam() {
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       router.push("/signin");
@@ -19,6 +20,19 @@ export default function Exam() {
   const exam = trpc.getExam.useQuery({
     slug: Array.isArray(examSlug) ? "" : examSlug ?? "",
   });
+
+  if (status !== "authenticated")
+    return (
+      <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+        Loading...
+      </p>
+    );
+
+  if (exam.error)
+    return (
+      <ErrorComponent error="fetching the exam" message={exam.error.message} />
+    );
+
   return (
     <div className="flex flex-col items-center justify-start">
       <h1 className="text-center text-2xl font-bold">{exam.data?.name}</h1>
@@ -31,7 +45,7 @@ export default function Exam() {
           ?.date.toLocaleDateString()}
       </p>
 
-      <div className="my-2 w-5/6">
+      <div className="my-2 w-5/6 md:w-3/4">
         <Button
           onClick={() => {
             // TODO: direct to slack channel
@@ -41,9 +55,9 @@ export default function Exam() {
         </Button>
       </div>
 
-      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2">
+      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">People</h2>
-        <div className="flex flex-row flex-wrap items-center justify-start">
+        <div className="flex w-full flex-row flex-wrap items-center justify-start">
           {exam.data?.users.map((user) => (
             <div
               key={user.id}
@@ -64,7 +78,7 @@ export default function Exam() {
         </div>
       </div>
 
-      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2">
+      <div className="my-2 w-5/6 rounded-md bg-gray-2 p-2 md:w-3/4">
         <h2 className="text-center text-xl">Study Sessions</h2>
         <div className="my-2 w-full">
           {exam.data?.sessions.map((session) => {
