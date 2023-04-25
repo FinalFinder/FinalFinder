@@ -32,7 +32,12 @@ export default function CreateSession() {
   return (
     <div className="flex flex-col items-center justify-start">
       <h1 className="text-center text-2xl font-bold">Create Study Session</h1>
-      <div className="flex w-5/6 flex-col items-center justify-start md:justify-evenly">
+      {createSession.isLoading && (
+        <p className="m-2 w-5/6 rounded-md bg-yellow p-2 text-2xl md:w-3/4">
+          Creating study session...
+        </p>
+      )}
+      <div className="flex w-full flex-col items-center justify-start md:justify-evenly">
         <div className="relative my-4 h-16 w-5/6 border-2 border-cyan-1 md:my-1 md:w-3/4 md:border-4">
           <select
             className="peer h-full w-full pl-1 text-black outline-none"
