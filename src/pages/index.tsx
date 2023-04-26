@@ -1,10 +1,12 @@
 import Image from "next/image";
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/router";
 
 import Button from "@/components/Button";
 import dino from "public/dino.png";
 
 export default function Home() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center justify-center pt-10 md:flex-row md:justify-evenly">
       <div className="mb-10 flex max-w-xs flex-col items-center justify-start md:max-w-md">
@@ -18,7 +20,7 @@ export default function Home() {
         <div className="mt-2 w-5/6">
           <Button
             onClick={() => {
-              signIn("slack");
+              router.push("/signin");
             }}
           >
             <p className="text-lg md:text-xl">Start Studying</p>
