@@ -33,6 +33,62 @@ async function getUserExams(userId: string) {
   )?.exams;
 }
 
+async function sendChannelInvite(channelId: string, slackId: string) {
+  await fetch("https://slack.com/api/conversations.invite", {
+    method: "POST",
+    body: JSON.stringify({
+      channel: channelId,
+      users: slackId,
+    }),
+    headers: slackPostHeaders,
+  });
+}
+
+async function scheduleUserReminders(
+  slackId: string,
+  date: Date,
+  name: string
+) {
+  // Schedule week-before reminder to user
+  await fetch("https://slack.com/api/chat.scheduleMessage", {
+    method: "POST",
+    body: JSON.stringify({
+      channel: slackId,
+      post_at:
+        // 7 am in user timezone the week before exam
+        date.valueOf() / 1000 - 7 * 24 * 60 * 60 + 7 * 60 * 60,
+      text: `*Your ${name} exam is in a week!* Get studying!`,
+    }),
+    headers: slackPostHeaders,
+  });
+
+  // Schedule day-before reminder to user
+  await fetch("https://slack.com/api/chat.scheduleMessage", {
+    method: "POST",
+    body: JSON.stringify({
+      channel: slackId,
+      post_at:
+        // 7 am in user timezone the day before exam
+        date.valueOf() / 1000 - 24 * 60 * 60 + 7 * 60 * 60,
+      text: `*Your ${name} exam is tomorrow!* Get studying!`,
+    }),
+    headers: slackPostHeaders,
+  });
+
+  // Schedule day-of reminder to user
+  await fetch("https://slack.com/api/chat.scheduleMessage", {
+    method: "POST",
+    body: JSON.stringify({
+      channel: slackId,
+      post_at:
+        // 7 am in user timezone day of exam
+        date.valueOf() / 1000 + 7 * 60 * 60,
+      text: `*Your ${name} exam is today!* Good luck!`,
+    }),
+    headers: slackPostHeaders,
+  });
+}
+
 export const appRouter = router({
   allExams: protectedProcedure.query(async () => {
     return await prisma.exam.findMany();
@@ -62,14 +118,7 @@ export const appRouter = router({
       const channel = await createRes.json();
 
       // Invite user to channel
-      await fetch("https://slack.com/api/conversations.invite", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: channel.channel.id,
-          users: ctx.session.user.slackId,
-        }),
-        headers: slackPostHeaders,
-      });
+      await sendChannelInvite(channel.channel.id, ctx.session.user.slackId);
 
       const exam = await prisma.exam.create({
         data: {
@@ -103,44 +152,11 @@ export const appRouter = router({
         },
       });
 
-      // Schedule week-before reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone the week before exam
-            input.date.valueOf() / 1000 - 7 * 24 * 60 * 60 + 7 * 60 * 60,
-          text: `*Your ${exam.name} exam is in a week!* Get studying!`,
-        }),
-        headers: slackPostHeaders,
-      });
-
-      // Schedule day-before reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone the day before exam
-            input.date.valueOf() / 1000 - 24 * 60 * 60 + 7 * 60 * 60,
-          text: `*Your ${exam.name} exam is tomorrow!* Get studying!`,
-        }),
-        headers: slackPostHeaders,
-      });
-
-      // Schedule day-of reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone day of exam
-            input.date.valueOf() / 1000 + 7 * 60 * 60,
-          text: `*Your ${exam.name} exam is today!* Good luck!`,
-        }),
-        headers: slackPostHeaders,
-      });
+      await scheduleUserReminders(
+        ctx.session.user.slackId,
+        input.date,
+        exam.name
+      );
     }),
   addUserToExam: protectedProcedure
     .input(
@@ -217,53 +233,13 @@ export const appRouter = router({
         },
       });
 
-      await fetch("https://slack.com/api/conversations.invite", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: exam!.slackId,
-          users: ctx.session.user.slackId,
-        }),
-        headers: slackPostHeaders,
-      });
+      sendChannelInvite(exam!.slackId, ctx.session.user.slackId);
 
-      // Schedule week-before reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone the week before exam
-            input.date.valueOf() / 1000 - 7 * 24 * 60 * 60 + 7 * 60 * 60,
-          text: `*Your ${input.exam} exam is in a week!* Get studying!`,
-        }),
-        headers: slackPostHeaders,
-      });
-
-      // Schedule day-before reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone the day before exam
-            input.date.valueOf() / 1000 - 24 * 60 * 60 + 7 * 60 * 60,
-          text: `*Your ${input.exam} exam is tomorrow!* Get studying!`,
-        }),
-        headers: slackPostHeaders,
-      });
-
-      // Schedule day-of reminder to user
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
-        method: "POST",
-        body: JSON.stringify({
-          channel: ctx.session.user.slackId,
-          post_at:
-            // 7 am in user timezone day of exam
-            input.date.valueOf() / 1000 + 7 * 60 * 60,
-          text: `*Your ${input.exam} exam is today!* Good luck!`,
-        }),
-        headers: slackPostHeaders,
-      });
+      await scheduleUserReminders(
+        ctx.session.user.slackId,
+        input.date,
+        exam!.name
+      );
     }),
   getExam: protectedProcedure
     .input(
