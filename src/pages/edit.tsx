@@ -164,15 +164,22 @@ export default function Edit() {
               );
 
               if (index === undefined || index === -1) {
-                createExam.mutateAsync({ date, name: examName }).then(() => {
-                  allExams.refetch();
-                  userExams.refetch();
-                });
+                createExam
+                  .mutateAsync({
+                    date,
+                    name: examName,
+                    tzOffset: new Date().getTimezoneOffset(),
+                  })
+                  .then(() => {
+                    allExams.refetch();
+                    userExams.refetch();
+                  });
               } else {
                 addUserExam
                   .mutateAsync({
                     date,
                     exam: examName,
+                    tzOffset: new Date().getTimezoneOffset(),
                   })
                   .then(() => {
                     userExams.refetch();

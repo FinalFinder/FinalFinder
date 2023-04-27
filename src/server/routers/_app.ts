@@ -42,6 +42,7 @@ export const appRouter = router({
       z.object({
         name: z.string(),
         date: z.date(),
+        tzOffset: z.number(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -102,12 +103,58 @@ export const appRouter = router({
           },
         },
       });
+
+      // Schedule week-before reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone the week before exam
+            input.date.valueOf() / 1000 -
+            7 * 24 * 60 * 60 +
+            7 * 60 * 60 -
+            input.tzOffset * 60,
+          text: `*Your ${exam.name} exam is in a week!* Get studying!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Schedule day-before reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone the day before exam
+            input.date.valueOf() / 1000 -
+            24 * 60 * 60 +
+            7 * 60 * 60 -
+            input.tzOffset * 60,
+          text: `*Your ${exam.name} exam is tomorrow!* Get studying!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Schedule day-of reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone day of exam
+            input.date.valueOf() / 1000 + 7 * 60 * 60 - input.tzOffset * 60,
+          text: `*Your ${exam.name} exam is today!* Good luck!`,
+        }),
+        headers: slackPostHeaders,
+      });
     }),
   addUserToExam: protectedProcedure
     .input(
       z.object({
         exam: z.string(),
         date: z.date(),
+        tzOffset: z.number(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -183,6 +230,51 @@ export const appRouter = router({
         body: JSON.stringify({
           channel: exam!.slackId,
           users: ctx.session.user.slackId,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Schedule week-before reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone the week before exam
+            input.date.valueOf() / 1000 -
+            7 * 24 * 60 * 60 +
+            7 * 60 * 60 -
+            input.tzOffset * 60,
+          text: `*Your ${input.exam} exam is in a week!* Get studying!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Schedule day-before reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone the day before exam
+            input.date.valueOf() / 1000 -
+            24 * 60 * 60 +
+            7 * 60 * 60 -
+            input.tzOffset * 60,
+          text: `*Your ${input.exam} exam is tomorrow!* Get studying!`,
+        }),
+        headers: slackPostHeaders,
+      });
+
+      // Schedule day-of reminder to user
+      await fetch("https://slack.com/api/chat.scheduleMessage", {
+        method: "POST",
+        body: JSON.stringify({
+          channel: ctx.session.user.slackId,
+          post_at:
+            // 7 am in user timezone day of exam
+            input.date.valueOf() / 1000 + 7 * 60 * 60 - input.tzOffset * 60,
+          text: `*Your ${input.exam} exam is today!* Good luck!`,
         }),
         headers: slackPostHeaders,
       });
