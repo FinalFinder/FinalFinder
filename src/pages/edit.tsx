@@ -168,7 +168,6 @@ export default function Edit() {
                   .mutateAsync({
                     date,
                     name: examName,
-                    tzOffset: new Date().getTimezoneOffset(),
                   })
                   .then(() => {
                     allExams.refetch();
@@ -179,7 +178,6 @@ export default function Edit() {
                   .mutateAsync({
                     date,
                     exam: examName,
-                    tzOffset: new Date().getTimezoneOffset(),
                   })
                   .then(() => {
                     userExams.refetch();
