@@ -158,6 +158,18 @@ export const appRouter = router({
             },
           },
         });
+
+        await prisma.examDate.update({
+          where: { id: date.id },
+          data: {
+            users: {
+              create: {
+                user: { connect: { id: ctx.session.user.id } },
+                examDateId: date.id,
+              },
+            },
+          },
+        });
       }
 
       const exam = await prisma.exam.findUnique({

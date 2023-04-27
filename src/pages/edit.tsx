@@ -162,7 +162,8 @@ export default function Edit() {
               const index = allExams.data?.findIndex(
                 (e) => e.name === examName
               );
-              if (!index || index === -1) {
+
+              if (index === undefined || index === -1) {
                 createExam.mutateAsync({ date, name: examName }).then(() => {
                   allExams.refetch();
                   userExams.refetch();
