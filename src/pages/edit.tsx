@@ -23,7 +23,7 @@ const fixTimezone = (oldDate: string) => {
 
 export default function Edit() {
   const [examName, setExamName] = useState<string>("");
-  const [dropdownVal, setDropdownVal] = useState<string>("");
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const router = useRouter();
   const { status, data: session } = useSession({
     required: true,
@@ -80,6 +80,10 @@ export default function Edit() {
     );
   }
 
+  const filteredExams = allExams.data?.filter((exam) =>
+    exam.name.toLowerCase().includes(examName.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col items-center justify-start">
       {createExam.isLoading && (
@@ -99,57 +103,59 @@ export default function Edit() {
         <p className="w-full text-center text-lg md:text-2xl">
           Tell us what exams you&apos;ll be taking this year
         </p>
-        <div className="my-2 w-full rounded-md bg-gray-2 p-4">
-          <p className="text-xl">Existing exams</p>
-          <select
-            className="my-2 w-full p-2 text-lg text-black"
-            value={dropdownVal}
-            onChange={(e) => setDropdownVal(e.target.value)}
+
+        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-2 md:border-4">
+          <input
+            className="peer h-full w-full pl-1 text-black outline-none"
+            placeholder="Search exams..."
+            value={examName}
+            list=""
+            onChange={(e) => setExamName(e.target.value)}
+            onBlur={() => {
+              // hacky way to be able to get the click event
+              setTimeout(() => {
+                setShowSuggestions(false);
+              }, 100);
+            }}
+            onFocus={() => {
+              setShowSuggestions(true);
+            }}
+          />
+          <datalist
+            id="exams-list"
+            role="listbox"
+            style={{
+              display: showSuggestions ? "block" : "none",
+            }}
+            className="absolute top-full z-10 max-h-44 w-full overflow-y-auto rounded-b border-2 border-t-0 border-cyan-2 bg-cyan-1 p-1 md:w-2/5"
           >
-            {allExams.data?.map((exam) => (
-              <option key={exam.slug} value={exam.name}>
+            {filteredExams?.slice(0, 3).map((exam) => (
+              <option
+                key={exam.name}
+                value={exam.name}
+                className="block rounded-md p-2 text-lg text-white hover:bg-cyan-2"
+                onClick={() => {
+                  let d = new Date();
+
+                  addUserExam
+                    .mutateAsync({
+                      exam: exam.name,
+                      date: fixTimezone(d.toISOString().split("T")[0]),
+                    })
+                    .then(() => {
+                      userExams.refetch();
+                    });
+
+                  setExamName("");
+                }}
+              >
                 {exam.name}
               </option>
             ))}
-          </select>
-          <div className="my-2 w-full">
-            <Button
+            <option
+              value="CREATE"
+              className="block rounded-md p-2 text-lg text-white hover:bg-cyan-2"
               onClick={() => {
-                if (dropdownVal === "") return;
-                let d = new Date();
-
-                addUserExam
-                  .mutateAsync({
-                    exam: dropdownVal,
-                    date: fixTimezone(d.toISOString().split("T")[0]),
-                  })
-                  .then(() => {
-                    userExams.refetch();
-                  });
-              }}
-            >
-              <p className="text-lg">Add</p>
-            </Button>
-          </div>
-        </div>
-
-        <div className="my-2 w-full rounded-md bg-gray-2 p-4">
-          <p className="text-xl">Add a new exam</p>
-          <p className="text-lg italic">
-            Make sure to check the existing exams first!
-          </p>
-          <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-2 md:border-4">
-            <input
-              className="peer h-full w-full pl-1 text-black outline-none"
-              placeholder="ex. AP Computer Science A"
-              value={examName}
-              onChange={(e) => setExamName(e.target.value)}
-            />
-          </div>
-
-          <div className="my-2 w-full">
-            <Button
-              onClick={async () => {
                 if (examName === "") return;
                 let d = new Date();
 
@@ -165,9 +171,9 @@ export default function Edit() {
                 setExamName("");
               }}
             >
-              <p className="text-lg">Add</p>
-            </Button>
-          </div>
+              Create exam &quot;{examName}&quot;
+            </option>
+          </datalist>
         </div>
       </div>
 
