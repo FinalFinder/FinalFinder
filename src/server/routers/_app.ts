@@ -294,45 +294,19 @@ export const appRouter = router({
         ).json()
       ).scheduled_messages;
 
-      // Delete old scheduled messages
-      const weekId: string = scheduledMessages.find(
-        (m: any) => m.text === getWeekMessage(exam!.name)
-      )?.id;
-      const dayId: string = scheduledMessages.find(
-        (m: any) => m.text === getDayMessage(exam!.name)
-      )?.id;
-      const todayId: string = scheduledMessages.find(
-        (m: any) => m.text === getTodayMessage(exam!.name)
-      )?.id;
+      const msgs = scheduledMessages.filter(
+        (m) =>
+          m.text === getWeekMessage(exam!.name) ||
+          m.text === getDayMessage(exam!.name) ||
+          m.text === getTodayMessage(exam!.name)
+      );
 
-      if (weekId) {
+      for (const msg of msgs) {
         await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
           method: "POST",
           body: JSON.stringify({
-            channel: exam!.slackId,
-            scheduled_message_id: weekId,
-          }),
-          headers: slackPostHeaders,
-        });
-      }
-
-      if (dayId) {
-        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
-          method: "POST",
-          body: JSON.stringify({
-            channel: exam!.slackId,
-            scheduled_message_id: dayId,
-          }),
-          headers: slackPostHeaders,
-        });
-      }
-
-      if (todayId) {
-        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
-          method: "POST",
-          body: JSON.stringify({
-            channel: exam!.slackId,
-            scheduled_message_id: todayId,
+            channel: msg.channel_id,
+            scheduled_message_id: msg.id,
           }),
           headers: slackPostHeaders,
         });
