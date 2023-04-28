@@ -101,6 +101,42 @@ async function scheduleUserReminders(
   });
 }
 
+async function createDate(examDate: Date, examName: string, userId: string) {
+  const date = await prisma.examDate.create({
+    data: {
+      date: examDate,
+      exam: {
+        connect: { name: examName },
+      },
+    },
+  });
+
+  await prisma.exam.update({
+    where: {
+      name: examName,
+    },
+    data: {
+      users: {
+        connect: { id: userId },
+      },
+    },
+  });
+
+  await prisma.examDate.update({
+    where: { id: date.id },
+    data: {
+      users: {
+        create: {
+          user: { connect: { id: userId } },
+          examDateId: date.id,
+        },
+      },
+    },
+  });
+
+  return date;
+}
+
 export const appRouter = router({
   allExams: protectedProcedure.query(async () => {
     return await prisma.exam.findMany();
@@ -206,37 +242,7 @@ export const appRouter = router({
           },
         });
       } else {
-        date = await prisma.examDate.create({
-          data: {
-            date: input.date,
-            exam: {
-              connect: { name: input.exam },
-            },
-          },
-        });
-
-        await prisma.exam.update({
-          where: {
-            name: input.exam,
-          },
-          data: {
-            users: {
-              connect: { id: ctx.session.user.id },
-            },
-          },
-        });
-
-        await prisma.examDate.update({
-          where: { id: date.id },
-          data: {
-            users: {
-              create: {
-                user: { connect: { id: ctx.session.user.id } },
-                examDateId: date.id,
-              },
-            },
-          },
-        });
+        await createDate(input.date, input.exam, ctx.session.user.id);
       }
 
       const exam = await prisma.exam.findUnique({
@@ -276,14 +282,35 @@ export const appRouter = router({
             },
           },
         },
-      });
-
-      await prisma.examDate.update({
-        where: { id: oldDate!.id },
-        data: {
-          date: input.date,
+        include: {
+          users: true,
         },
       });
+
+      if (oldDate!.users.length > 1) {
+        await prisma.examDate.update({
+          where: { id: oldDate!.id },
+          data: {
+            users: {
+              delete: {
+                examDateId_userId: {
+                  examDateId: oldDate!.id,
+                  userId: ctx.session.user.id,
+                },
+              },
+            },
+          },
+        });
+
+        await createDate(input.date, input.exam, ctx.session.user.id);
+      } else {
+        await prisma.examDate.update({
+          where: { id: oldDate!.id },
+          data: {
+            date: input.date,
+          },
+        });
+      }
 
       const scheduledMessages: any[] = (
         await (
