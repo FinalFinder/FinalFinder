@@ -10,6 +10,18 @@ const slackPostHeaders = {
   Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
 };
 
+function getWeekMessage(exam: string) {
+  return `*Your ${exam} exam is in a week!* Get studying!`;
+}
+
+function getDayMessage(exam: string) {
+  return `*Your ${exam} exam is tomorrow!* Get studying!`;
+}
+
+function getTodayMessage(exam: string) {
+  return `*Your ${exam} exam is today!* Good luck!`;
+}
+
 async function getUserExams(userId: string) {
   return (
     await prisma.user.findUnique({
@@ -57,7 +69,7 @@ async function scheduleUserReminders(
       post_at:
         // 7 am in user timezone the week before exam
         date.valueOf() / 1000 - 7 * 24 * 60 * 60 + 7 * 60 * 60,
-      text: `*Your ${name} exam is in a week!* Get studying!`,
+      text: getWeekMessage(name),
     }),
     headers: slackPostHeaders,
   });
@@ -70,7 +82,7 @@ async function scheduleUserReminders(
       post_at:
         // 7 am in user timezone the day before exam
         date.valueOf() / 1000 - 24 * 60 * 60 + 7 * 60 * 60,
-      text: `*Your ${name} exam is tomorrow!* Get studying!`,
+      text: getDayMessage(name),
     }),
     headers: slackPostHeaders,
   });
@@ -83,7 +95,7 @@ async function scheduleUserReminders(
       post_at:
         // 7 am in user timezone day of exam
         date.valueOf() / 1000 + 7 * 60 * 60,
-      text: `*Your ${name} exam is today!* Good luck!`,
+      text: getTodayMessage(name),
     }),
     headers: slackPostHeaders,
   });
@@ -234,6 +246,97 @@ export const appRouter = router({
       });
 
       sendChannelInvite(exam!.slackId, ctx.session.user.slackId);
+
+      await scheduleUserReminders(
+        ctx.session.user.slackId,
+        input.date,
+        exam!.name
+      );
+    }),
+  changeExamDate: protectedProcedure
+    .input(
+      z.object({
+        exam: z.string(),
+        date: z.date(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const exam = await prisma.exam.findUnique({
+        where: {
+          name: input.exam,
+        },
+      });
+
+      const oldDate = await prisma.examDate.findFirst({
+        where: {
+          examName: input.exam,
+          users: {
+            some: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+      });
+
+      await prisma.examDate.update({
+        where: { id: oldDate!.id },
+        data: {
+          date: input.date,
+        },
+      });
+
+      const scheduledMessages: any[] = (
+        await (
+          await fetch("https://slack.com/api/chat.scheduledMessages.list", {
+            method: "POST",
+            headers: slackPostHeaders,
+          })
+        ).json()
+      ).scheduled_messages;
+
+      // Delete old scheduled messages
+      const weekId: string = scheduledMessages.find(
+        (m: any) => m.text === getWeekMessage(exam!.name)
+      )?.id;
+      const dayId: string = scheduledMessages.find(
+        (m: any) => m.text === getDayMessage(exam!.name)
+      )?.id;
+      const todayId: string = scheduledMessages.find(
+        (m: any) => m.text === getTodayMessage(exam!.name)
+      )?.id;
+
+      if (weekId) {
+        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
+          method: "POST",
+          body: JSON.stringify({
+            channel: exam!.slackId,
+            scheduled_message_id: weekId,
+          }),
+          headers: slackPostHeaders,
+        });
+      }
+
+      if (dayId) {
+        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
+          method: "POST",
+          body: JSON.stringify({
+            channel: exam!.slackId,
+            scheduled_message_id: dayId,
+          }),
+          headers: slackPostHeaders,
+        });
+      }
+
+      if (todayId) {
+        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
+          method: "POST",
+          body: JSON.stringify({
+            channel: exam!.slackId,
+            scheduled_message_id: todayId,
+          }),
+          headers: slackPostHeaders,
+        });
+      }
 
       await scheduleUserReminders(
         ctx.session.user.slackId,
