@@ -152,27 +152,29 @@ export default function Edit() {
                 {exam.name}
               </option>
             ))}
-            <option
-              value="CREATE"
-              className="block rounded-md p-2 text-lg text-white hover:bg-cyan-2"
-              onClick={() => {
-                if (examName === "") return;
-                let d = new Date();
+            {examName !== "" && (
+              <option
+                value="CREATE"
+                className="block rounded-md p-2 text-lg text-white hover:bg-cyan-2"
+                onClick={() => {
+                  if (examName === "") return;
+                  let d = new Date();
 
-                createExam
-                  .mutateAsync({
-                    name: examName,
-                    date: fixTimezone(d.toISOString().split("T")[0]),
-                  })
-                  .then(() => {
-                    userExams.refetch();
-                  });
+                  createExam
+                    .mutateAsync({
+                      name: examName,
+                      date: fixTimezone(d.toISOString().split("T")[0]),
+                    })
+                    .then(() => {
+                      userExams.refetch();
+                    });
 
-                setExamName("");
-              }}
-            >
-              Create exam &quot;{examName}&quot;
-            </option>
+                  setExamName("");
+                }}
+              >
+                Create exam &quot;{examName}&quot;
+              </option>
+            )}
           </datalist>
         </div>
       </div>
