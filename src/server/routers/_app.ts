@@ -62,7 +62,7 @@ async function scheduleUserReminders(
   name: string
 ) {
   // Schedule week-before reminder to user
-  await fetch("https://slack.com/api/chat.scheduleMessage", {
+  const weekPromise = fetch("https://slack.com/api/chat.scheduleMessage", {
     method: "POST",
     body: JSON.stringify({
       channel: slackId,
@@ -75,7 +75,7 @@ async function scheduleUserReminders(
   });
 
   // Schedule day-before reminder to user
-  await fetch("https://slack.com/api/chat.scheduleMessage", {
+  const dayPromise = fetch("https://slack.com/api/chat.scheduleMessage", {
     method: "POST",
     body: JSON.stringify({
       channel: slackId,
@@ -88,7 +88,7 @@ async function scheduleUserReminders(
   });
 
   // Schedule day-of reminder to user
-  await fetch("https://slack.com/api/chat.scheduleMessage", {
+  const todayPromise = fetch("https://slack.com/api/chat.scheduleMessage", {
     method: "POST",
     body: JSON.stringify({
       channel: slackId,
@@ -99,19 +99,37 @@ async function scheduleUserReminders(
     }),
     headers: slackPostHeaders,
   });
+
+  await Promise.all([weekPromise, dayPromise, todayPromise]);
 }
 
 async function createDate(examDate: Date, examName: string, userId: string) {
-  const date = await prisma.examDate.create({
-    data: {
-      date: examDate,
-      exam: {
-        connect: { name: examName },
+  const datePromise = prisma.$transaction(async (tx) => {
+    const date = await tx.examDate.create({
+      data: {
+        date: examDate,
+        exam: {
+          connect: { name: examName },
+        },
       },
-    },
+    });
+
+    await tx.examDate.update({
+      where: { id: date.id },
+      data: {
+        users: {
+          create: {
+            user: { connect: { id: userId } },
+            examDateId: date.id,
+          },
+        },
+      },
+    });
+
+    return date;
   });
 
-  await prisma.exam.update({
+  const examPromise = prisma.exam.update({
     where: {
       name: examName,
     },
@@ -122,17 +140,7 @@ async function createDate(examDate: Date, examName: string, userId: string) {
     },
   });
 
-  await prisma.examDate.update({
-    where: { id: date.id },
-    data: {
-      users: {
-        create: {
-          user: { connect: { id: userId } },
-          examDateId: date.id,
-        },
-      },
-    },
-  });
+  const [date] = await Promise.all([datePromise, examPromise]);
 
   return date;
 }
@@ -165,45 +173,22 @@ export const appRouter = router({
 
       const channel = await createRes.json();
 
-      // Invite user to channel
       await sendChannelInvite(channel.channel.id, ctx.session.user.slackId);
 
-      const exam = await prisma.exam.create({
+      await prisma.exam.create({
         data: {
           name: input.name,
           slug: input.name.trim().toLowerCase().replace(/\s+/g, "-"),
           slackId: channel.channel.id,
-          users: {
-            connect: { id: ctx.session.user.id },
-          },
         },
       });
 
-      const date = await prisma.examDate.create({
-        data: {
-          date: input.date,
-          exam: {
-            connect: { name: exam.name },
-          },
-        },
-      });
-
-      await prisma.examDate.update({
-        where: { id: date.id },
-        data: {
-          users: {
-            create: {
-              user: { connect: { id: ctx.session.user.id } },
-              examDateId: date.id,
-            },
-          },
-        },
-      });
+      await createDate(input.date, input.name, ctx.session.user.id);
 
       await scheduleUserReminders(
         ctx.session.user.slackId,
         input.date,
-        exam.name
+        input.name
       );
     }),
   addUserToExam: protectedProcedure
@@ -222,7 +207,7 @@ export const appRouter = router({
       });
 
       if (date) {
-        await prisma.examDate.update({
+        const datePromise = prisma.examDate.update({
           where: { id: date.id },
           data: {
             users: {
@@ -233,7 +218,7 @@ export const appRouter = router({
             },
           },
         });
-        await prisma.exam.update({
+        const examPromise = prisma.exam.update({
           where: { name: input.exam },
           data: {
             users: {
@@ -241,6 +226,8 @@ export const appRouter = router({
             },
           },
         });
+
+        await prisma.$transaction([datePromise, examPromise]);
       } else {
         await createDate(input.date, input.exam, ctx.session.user.id);
       }
@@ -251,13 +238,18 @@ export const appRouter = router({
         },
       });
 
-      sendChannelInvite(exam!.slackId, ctx.session.user.slackId);
+      const invitePromise = sendChannelInvite(
+        exam!.slackId,
+        ctx.session.user.slackId
+      );
 
-      await scheduleUserReminders(
+      const schedulePromise = await scheduleUserReminders(
         ctx.session.user.slackId,
         input.date,
         exam!.name
       );
+
+      await Promise.all([invitePromise, schedulePromise]);
     }),
   changeExamDate: protectedProcedure
     .input(
@@ -267,12 +259,6 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const exam = await prisma.exam.findUnique({
-        where: {
-          name: input.exam,
-        },
-      });
-
       const oldDate = await prisma.examDate.findFirst({
         where: {
           examName: input.exam,
@@ -323,27 +309,33 @@ export const appRouter = router({
 
       const msgs = scheduledMessages.filter(
         (m) =>
-          m.text === getWeekMessage(exam!.name) ||
-          m.text === getDayMessage(exam!.name) ||
-          m.text === getTodayMessage(exam!.name)
+          m.text === getWeekMessage(input.exam) ||
+          m.text === getDayMessage(input.exam) ||
+          m.text === getTodayMessage(input.exam)
       );
+
+      const deletePromises = [];
 
       for (const msg of msgs) {
-        await fetch("https://slack.com/api/chat.deleteScheduledMessage", {
-          method: "POST",
-          body: JSON.stringify({
-            channel: msg.channel_id,
-            scheduled_message_id: msg.id,
-          }),
-          headers: slackPostHeaders,
-        });
+        deletePromises.push(
+          fetch("https://slack.com/api/chat.deleteScheduledMessage", {
+            method: "POST",
+            body: JSON.stringify({
+              channel: msg.channel_id,
+              scheduled_message_id: msg.id,
+            }),
+            headers: slackPostHeaders,
+          })
+        );
       }
 
-      await scheduleUserReminders(
+      const schedulePromise = scheduleUserReminders(
         ctx.session.user.slackId,
         input.date,
-        exam!.name
+        input.exam
       );
+
+      await Promise.all([...deletePromises, schedulePromise]);
     }),
   getExam: protectedProcedure
     .input(
@@ -394,7 +386,7 @@ export const appRouter = router({
       });
 
       // schedule 5 minutes message
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
+      const fivePromise = fetch("https://slack.com/api/chat.scheduleMessage", {
         method: "POST",
         body: JSON.stringify({
           channel: exam?.slackId,
@@ -405,7 +397,7 @@ export const appRouter = router({
       });
 
       // schedule session start message
-      await fetch("https://slack.com/api/chat.scheduleMessage", {
+      const startPromise = fetch("https://slack.com/api/chat.scheduleMessage", {
         method: "POST",
         body: JSON.stringify({
           channel: exam?.slackId,
@@ -416,7 +408,7 @@ export const appRouter = router({
       });
 
       // send scheduled message
-      await fetch("https://slack.com/api/chat.postMessage", {
+      const schedulePromise = fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
         body: JSON.stringify({
           channel: exam?.slackId,
@@ -428,6 +420,8 @@ export const appRouter = router({
         }),
         headers: slackPostHeaders,
       });
+
+      await Promise.all([fivePromise, startPromise, schedulePromise]);
     }),
   userSessions: protectedProcedure.query(async ({ ctx }) => {
     const userExams = await getUserExams(ctx.session.user.id);
