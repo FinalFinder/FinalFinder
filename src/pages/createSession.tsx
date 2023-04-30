@@ -78,7 +78,7 @@ export default function CreateSession() {
           </select>
         </div>
 
-        <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
+        <div className="relative my-4 flex h-16 w-full flex-col items-start justify-start border-2 border-cyan-1 md:my-1 md:border-4">
           <input
             className="peer h-full w-full pl-1 text-black outline-none"
             placeholder="Date"
@@ -87,6 +87,12 @@ export default function CreateSession() {
             onChange={(e) => setSessionDate(e.target.value)}
           />
         </div>
+
+        {new Date(sessionDate).valueOf() - new Date().valueOf() <= 60 * 1000 ? (
+          <p className="self-start text-lg text-red-500">
+            Study sessions should be scheduled at least 1 minute in advance
+          </p>
+        ) : null}
 
         <div className="my-2 w-full">
           <Button
