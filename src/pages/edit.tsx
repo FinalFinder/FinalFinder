@@ -196,7 +196,6 @@ export default function Edit() {
                 key={exam.name}
                 name={exam.name}
                 date={date?.toISOString() ?? ""}
-                refresh={userExams.refetch}
               />
             );
           })
@@ -206,37 +205,42 @@ export default function Edit() {
   );
 }
 
-function AddedExam({
-  name,
-  date,
-  refresh,
-}: {
-  name: string;
-  date: string;
-  refresh: () => void;
-}) {
+function AddedExam({ name, date }: { name: string; date: string }) {
+  const [unsaved, setUnsaved] = useState(false);
+  const [newDate, setNewDate] = useState(date.split("T")[0] ?? "");
   const changeExamDate = trpc.changeExamDate.useMutation();
 
   return (
     <div className="my-2 flex w-full flex-col items-center justify-start rounded-md bg-blue p-2">
-      <p className="w-full text-left text-xl  font-bold">{name}</p>
-      <div className="relative my-4 h-16 w-full border-2 border-cyan-1 md:my-1 md:border-4">
+      <p className="w-full text-left text-xl font-bold">
+        {name}
+        <span className="text-xl font-bold text-red-500">
+          {unsaved ? "*" : ""}
+        </span>
+      </p>
+      <div className="relative my-4 flex h-16 w-full flex-row items-center justify-start border-2 border-cyan-1 md:my-1 md:border-4">
         <input
-          className="peer h-full w-full pl-1 text-black outline-none"
+          className="peer h-full flex-grow pl-1 text-black outline-none"
           placeholder="Date"
-          value={date.split("T")[0] ?? ""}
+          value={newDate}
           type="date"
           onChange={(e) => {
-            changeExamDate
-              .mutateAsync({
-                exam: name,
-                date: fixTimezone(e.target.value),
-              })
-              .then(() => {
-                refresh();
-              });
+            setNewDate(e.target.value);
+            setUnsaved(true);
           }}
         />
+        <p
+          className="flex h-full w-16 cursor-pointer flex-col items-center justify-center bg-cyan-1 text-2xl font-bold"
+          onClick={() => {
+            changeExamDate.mutateAsync({
+              exam: name,
+              date: fixTimezone(newDate),
+            });
+            setUnsaved(false);
+          }}
+        >
+          +
+        </p>
       </div>
     </div>
   );
