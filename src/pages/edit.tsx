@@ -230,7 +230,7 @@ function AddedExam({ name, date }: { name: string; date: string }) {
           }}
         />
         <p
-          className="flex h-full w-16 cursor-pointer flex-col items-center justify-center bg-cyan-1 text-2xl font-bold"
+          className="flex h-full w-32 cursor-pointer flex-col items-center justify-center bg-cyan-1 text-2xl"
           onClick={() => {
             changeExamDate.mutateAsync({
               exam: name,
@@ -239,7 +239,7 @@ function AddedExam({ name, date }: { name: string; date: string }) {
             setUnsaved(false);
           }}
         >
-          +
+          Save
         </p>
       </div>
     </div>
