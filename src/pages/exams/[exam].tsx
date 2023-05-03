@@ -66,7 +66,7 @@ export default function Exam() {
           {exam.data?.users.map((user) => (
             <div
               key={user.id}
-              className="flex flex-col items-center justify-start"
+              className="mx-4 flex flex-col items-center justify-start"
             >
               <Image
                 src={
